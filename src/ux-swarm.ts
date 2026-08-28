@@ -31,7 +31,7 @@ if (!url) {
 const prompt = `Run a parallel UX audit of ${url}.
 
 1. Recon the site YOURSELF with a Kernel browser (NOT web_fetch — the site is
-   likely JS-rendered; use \`kernel browsers create\` + \`playwright execute\` to read
+   likely JS-rendered; use \`KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers create\` + \`KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers playwright execute\` to read
    the rendered links/nav, as your instructions describe). ENUMERATE its individual
    pages — landing, pricing, docs home, sign-up, log-in, key product/feature pages,
    blog, changelog, etc. Produce a concrete list of page URLs to audit. (Do recon
