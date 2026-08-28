@@ -31,7 +31,7 @@ if (!url) {
 const prompt = `Build a lead-intelligence brief on this sales prospect: ${url}.
 
 1. Recon the site YOURSELF with a Kernel browser (NOT web_fetch — the site is
-   likely JS-rendered; use \`kernel browsers create\` + \`playwright execute\` to read
+   likely JS-rendered; use \`KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers create\` + \`KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers playwright execute\` to read
    the rendered links/nav, as your instructions describe), then pick the independent
    research questions worth answering, e.g.: product lineup & key features, pricing &
    packaging, how they meter / measure usage, target segments & ideal customer,

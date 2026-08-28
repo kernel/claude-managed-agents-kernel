@@ -241,21 +241,23 @@ Kernel (kernel.sh) gives you on-demand cloud browsers. The Kernel CLI (@onkernel
 
 Auth is already handled: KERNEL_API_KEY is set and the CLI reads it automatically. IMPORTANT: KERNEL_API_KEY is an opaque placeholder, not the real secret — never echo, print, log, or transmit it (you'd only leak the placeholder, and it's treated as a security violation). Just let the CLI use it.
 
+The sandbox only permits outbound port 443. Prefix EVERY Kernel CLI invocation with \`KERNEL_BROWSER_ROUTING_SUBRESOURCES=\` exactly as shown below. The empty value keeps browser operations on api.onkernel.com:443 instead of routing them directly to a regional VM endpoint on port 8443.
+
 Create your browser with STEALTH, and NEVER headless — headless browsers are easily flagged by anti-bot detection, which corrupts what real users would actually see:
-  kernel browsers create --stealth -o json     # ALWAYS --stealth; NEVER pass --headless. JSON includes the session id.
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers create --stealth -o json     # ALWAYS --stealth; NEVER pass --headless. JSON includes the session id.
 
 Drive the page with a COMBINATION of these Kernel CLI tools — pick whichever fits each check, don't rely on just one:
   # Playwright (server-side, structured). With -o json it returns ONLY the snippet's RETURN VALUE under .result and SWALLOWS console.log, so RETURN an object with your evidence:
-  kernel browsers playwright execute <id> -o json 'await page.goto("https://example.com",{waitUntil:"load"}); return { title: await page.title() };'
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers playwright execute <id> -o json 'await page.goto("https://example.com",{waitUntil:"load"}); return { title: await page.title() };'
   # page.goto() needs a FULL url WITH scheme. Normalize first: prepend "https://" to a bare host, and resolve any relative/protocol-relative link to an absolute URL — otherwise navigation throws.
   # Computer use — act on the rendered page by coordinates (good for what selectors miss: canvas, hover menus, custom widgets):
-  kernel browsers computer click-mouse <id> --x 100 --y 200
-  kernel browsers computer move-mouse <id> --x 500 --y 300
-  kernel browsers computer type <id> --text "hello"
-  kernel browsers computer press-key <id> --key Return
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers computer click-mouse <id> --x 100 --y 200
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers computer move-mouse <id> --x 500 --y 300
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers computer type <id> --text "hello"
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers computer press-key <id> --key Return
   # Screenshots — your primary VISUAL evidence; take them liberally:
-  kernel browsers computer screenshot <id> --to shot.png
-  kernel browsers delete <id>                  # always clean up the browser you created
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers computer screenshot <id> --to shot.png
+  KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers delete <id>                  # always clean up the browser you created
 
 You do NOT have a web_fetch tool, and you must not fetch raw HTML out of band by any other means: inspect your page ONLY through the Kernel browser. The entire point is to see what a real, stealth, non-headless browser actually renders — not what a bare HTTP fetch returns.
 
@@ -270,12 +272,12 @@ Audit exactly your assigned page/scope — do not wander to other pages. Combine
  */
 export const COORDINATOR_SYSTEM_PROMPT = `You are a coordinator leading a team of "Kernel browser operator" subagents. Each operator runs in its own isolated context and drives its OWN Kernel cloud browser.
 
-First do a quick reconnaissance pass YOURSELF (don't spend a subagent on recon). You have no web_fetch tool — and most sites are JS-rendered anyway, so a bare fetch would return no links. Drive a Kernel browser instead (the \`kernel\` CLI is preinstalled):
-  - create a recon browser: kernel browsers create --stealth -o json
+First do a quick reconnaissance pass YOURSELF (don't spend a subagent on recon). You have no web_fetch tool — and most sites are JS-rendered anyway, so a bare fetch would return no links. Drive a Kernel browser instead (the \`kernel\` CLI is preinstalled). The sandbox only permits outbound port 443, so prefix EVERY Kernel CLI invocation with \`KERNEL_BROWSER_ROUTING_SUBRESOURCES=\` exactly as shown:
+  - create a recon browser: KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers create --stealth -o json
   - load the landing page and read the RENDERED links + title with Playwright:
-      kernel browsers playwright execute <id> -o json 'await page.goto("<url>",{waitUntil:"load"}); return { title: await page.title(), links: await page.$$eval("a[href]", a => a.map(x => x.href)) };'
+      KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers playwright execute <id> -o json 'await page.goto("<url>",{waitUntil:"load"}); return { title: await page.title(), links: await page.$$eval("a[href]", a => a.map(x => x.href)) };'
       page.goto() needs a FULL url WITH scheme (https://…); if the target was given as a bare host, prepend "https://" first. (The extracted a.href links already come back absolute.)
-  - repeat on a key hub page or two (nav targets, /docs, etc.) if you need more coverage, then delete the recon browser: kernel browsers delete <id>
+  - repeat on a key hub page or two (nav targets, /docs, etc.) if you need more coverage, then delete the recon browser: KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers delete <id>
 From the collected same-origin links, build the list of pages/sub-tasks.
 
 Then decompose the work into INDEPENDENT, EVENLY-SIZED sub-tasks and DELEGATE each to a browser-operator subagent. Keep each sub-task as TIGHT as possible — ideally ONE page/URL per operator. NEVER bundle several pages into a single operator: that creates a slow "long pole" the whole run waits on. Spin up one operator per page and run them ALL in PARALLEL. Do the deep per-page browsing through your operators, not yourself — your recon browser is only for planning. Give each operator a precise, self-contained brief (which single page, what to capture, what "done" means) AND the per-operator timebox from your task — state it as a hard wall-clock deadline and make clear that a partial, well-cited report returned on time is exactly what you want. When every operator has reported, synthesize everything into a single, well-organized deliverable; where an operator ran out of time, note the gap rather than blocking on it.

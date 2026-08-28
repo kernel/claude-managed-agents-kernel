@@ -40,7 +40,11 @@ config.networking = {
 }
 ```
 
-That's all the recipe needs: it drives the browser entirely over Kernel's CLI via `kernel browsers computer` / ``kernel browsers playwright execute  /  kernel browsers screenshot``/ etc.
+That's all the recipe needs: it drives the browser entirely over Kernel's CLI. Current CLI releases route browser operations directly to regional VM endpoints on port 8443 by default, so every invocation in this cookbook uses an empty `KERNEL_BROWSER_ROUTING_SUBRESOURCES` value to keep traffic on `api.onkernel.com:443`:
+
+```bash
+KERNEL_BROWSER_ROUTING_SUBRESOURCES= kernel browsers computer screenshot <session-id> --to screenshot.png
+```
 
 ### (B) Credential networking — where the placeholder becomes the real secret
 
